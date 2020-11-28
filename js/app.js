@@ -1,46 +1,97 @@
-// Enemies our player must avoid
-var Enemy = function() {
-    // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
+const blockWidth = 101;
+const blockHeight = 83;
+const playerYOffset = 10;
+const playerXStep = blockWidth / 2;
+const playerYStep = blockHeight / 2;
+const enemyYOffset = 20;
+const enemyMinSpeed = 30;
+const enemyMaxSpeed = 200;
+const enemyQuantity = 5;
+const enemyLinesQuantity = 3;
+const scatterX = blockWidth / 2;
+const scatterY = blockHeight / 2;
+const allEnemies = [];
+let player;
 
-    // The image/sprite for our enemies, this uses
-    // a helper we've provided to easily load images
-    this.sprite = 'images/enemy-bug.png';
+let Enemy = function() {
+  this.sprite = 'images/enemy-bug.png';
+  this.x = -blockWidth;
+  this.y = blockHeight * Math.floor(Math.random() * enemyLinesQuantity + 1) - enemyYOffset;
+  this.speed = Math.floor(Math.random() * (enemyMaxSpeed-enemyMinSpeed)) + enemyMinSpeed;
 };
 
-// Update the enemy's position, required method for game
-// Parameter: dt, a time delta between ticks
 Enemy.prototype.update = function(dt) {
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers.
+  this.x += this.speed * dt;
+  if (this.x > blockWidth * 5) {
+    this.x = -blockWidth;
+  };
+  this.checkCollisions();
 };
 
-// Draw the enemy on the screen, required method for game
 Enemy.prototype.render = function() {
-    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+  ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
+Enemy.prototype.checkCollisions = function() {
+  if ((Math.abs(this.x - player.x) <= scatterX)&&(Math.abs(this.y - player.y) <= scatterY)) {
+    alert('You lose');
+    initGameField();
+  };
+};
 
+let Player = function() {
+  this.sprite = 'images/char-boy.png';
+  this.x = blockWidth * 2;
+  this.y = blockHeight * 5 - playerYOffset;
+}
 
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
-
-
-
-// This listens for key presses and sends the keys to your
-// Player.handleInput() method. You don't need to modify this.
-document.addEventListener('keyup', function(e) {
-    var allowedKeys = {
-        37: 'left',
-        38: 'up',
-        39: 'right',
-        40: 'down'
+Player.prototype.handleInput = function(direction) {
+  if (direction == 'left') {
+    if (this.x > 1) {
+      this.x -= playerXStep;
     };
+  } else if (direction == 'right') {
+    if (this.x < blockWidth * 4) {
+      this.x += playerXStep;
+    };
+  } else if (direction == 'up') {
+    if (this.y >= Math.floor(playerYStep - playerYOffset)) {
+      this.y -= playerYStep;
+    };
+  } else if (direction == 'down') {
+    if (this.y < blockHeight * 5 - playerYStep) {
+      this.y += playerYStep;
+    };
+  };
+};
 
-    player.handleInput(allowedKeys[e.keyCode]);
+Player.prototype.update = function() {
+  if (this.y < playerYStep - playerYOffset) {
+    setTimeout(function() {
+      alert('You win');
+      initGameField();
+    }, 10);
+  };
+};
+
+Player.prototype.render = Enemy.prototype.render;
+
+function initGameField() {
+  player = new Player();
+  for (let i = 0; i < enemyQuantity; i++) {
+    allEnemies[i] = new Enemy();
+  };
+};
+
+initGameField();
+
+document.addEventListener('keyup', function(e) {
+  let allowedKeys = {
+    37: 'left',
+    38: 'up',
+    39: 'right',
+    40: 'down'
+  };
+
+  player.handleInput(allowedKeys[e.keyCode]);
 });
